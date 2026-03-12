@@ -1,0 +1,29 @@
+{
+  "Linear SVM": {
+    "fg_macro_f1": 0.745,
+    "map": 0.1885,
+    "map_per_class": {
+      "person": 0.2129,
+      "car": 0.1598,
+      "truck": 0.1927
+    }
+  },
+  "gamma_cv": {
+    "scores": {
+      "0.0001": 0.5454747181869469,
+      "0.001": 0.699466131495802,
+      "0.01": 0.4743233688330715
+    },
+    "best_gamma": 0.001
+  },
+  "Approximate RBF SVM": {
+    "best_gamma": 0.001,
+    "fg_macro_f1": 0.6711,
+    "map": 0.1224,
+    "map_per_class": {
+      "person": 0.1533,
+      "car": 0.1062,
+      "truck": 0.1077
+    }
+  }
+}

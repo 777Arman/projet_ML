@@ -10,6 +10,11 @@ extracts ResNet-50 features for each proposal, and saves:
     data/features_train.npz
     data/features_val.npz
 
+When run with --augment, also produces:
+    data/features_train_augmented.npz
+which contains the original train regions PLUS augmented versions of foreground
+regions (random horizontal flip, color jitter, small rotation).
+
 Each .npz file contains:
     features   : float32 array, shape (N, 2048)
     labels     : int64 array,   shape (N,)
@@ -24,6 +29,7 @@ Label encoding:
 
 Usage:
     python extract_features.py --data_dir ./data --batch_size 64
+    python extract_features.py --data_dir ./data --batch_size 64 --augment
 """
 
 import argparse
@@ -75,6 +81,13 @@ RESNET_TRANSFORM = T.Compose([
     T.ToTensor(),
     T.Normalize(mean=[0.485, 0.456, 0.406],
                 std =[0.229, 0.224, 0.225]),
+])
+
+# Augmentation transforms applied to foreground crops BEFORE ResNet
+AUGMENT_TRANSFORM = T.Compose([
+    T.RandomHorizontalFlip(p=0.5),
+    T.ColorJitter(brightness=0.3, contrast=0.3),
+    T.RandomRotation(degrees=15),
 ])
 
 
@@ -187,10 +200,12 @@ def append_to_npz(out_file, features, labels, boxes, image_ids):
 
 
 def process_split(split_name, image_list, images_dir, gt_by_image,
-                  model, device, batch_size, out_file, rng):
+                  model, device, batch_size, out_file, rng, augment=False):
     """
     Run the full pipeline for a list of images and save results incrementally
     to avoid running out of RAM.
+    If augment=True, for each foreground region also extract features from
+    one augmented version of the crop (flip, jitter, rotation).
     """
     # remove any previous partial output for this split
     if out_file.exists():
@@ -255,7 +270,14 @@ def process_split(split_name, image_list, images_dir, gt_by_image,
             batch_boxes.append(box)
             batch_labels.append(label)
 
-            if len(batch_crops) == batch_size or i == len(proposals) - 1:
+            # If augmenting, add one augmented version for foreground regions
+            if augment and label > 0:
+                aug_crop = AUGMENT_TRANSFORM(crop)
+                batch_crops.append(aug_crop)
+                batch_boxes.append(box)
+                batch_labels.append(label)
+
+            if len(batch_crops) >= batch_size or i == len(proposals) - 1:
                 feats = extract_batch(batch_crops, model, device)
                 chunk_features.append(feats)
                 chunk_boxes.extend(batch_boxes)
@@ -310,6 +332,8 @@ def main():
                         help="Number of region crops per ResNet forward pass")
     parser.add_argument("--seed", type=int, default=42,
                         help="Random seed for background subsampling")
+    parser.add_argument("--augment", action="store_true",
+                        help="Generate augmented training features (features_train_augmented.npz)")
     args = parser.parse_args()
 
     data_dir   = Path(args.data_dir)
@@ -345,16 +369,28 @@ def main():
     print("Loading ResNet-50...")
     model = build_feature_extractor(device)
 
-    for split_name, image_list, out_file in [
-        ("train", train_imgs, data_dir / "features_train.npz"),
-        ("val",   val_imgs,   data_dir / "features_val.npz"),
-    ]:
-        print(f"\nProcessing {split_name} split ({len(image_list)} images)...")
+    # If --augment, only produce the augmented train file (skip normal extraction)
+    if args.augment:
+        aug_file = data_dir / "features_train_augmented.npz"
+        print(f"\nProcessing augmented train split ({len(train_imgs)} images)...")
+        print("  Foreground regions will be augmented (flip, jitter, rotation).")
+        print("  Background regions are NOT augmented.")
         process_split(
-            split_name, image_list, images_dir,
+            "train_augmented", train_imgs, images_dir,
             gt_by_image, model, device, args.batch_size,
-            out_file, rng
+            aug_file, rng, augment=True
         )
+    else:
+        for split_name, image_list, out_file in [
+            ("train", train_imgs, data_dir / "features_train.npz"),
+            ("val",   val_imgs,   data_dir / "features_val.npz"),
+        ]:
+            print(f"\nProcessing {split_name} split ({len(image_list)} images)...")
+            process_split(
+                split_name, image_list, images_dir,
+                gt_by_image, model, device, args.batch_size,
+                out_file, rng
+            )
 
     print("\nFeature extraction complete.")
 

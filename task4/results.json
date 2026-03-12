@@ -1,0 +1,72 @@
+{
+  "depths": [
+    {
+      "depth": 1,
+      "label": "1",
+      "train_f1": 0.0,
+      "val_f1": 0.0,
+      "n_leaves": 2
+    },
+    {
+      "depth": 2,
+      "label": "2",
+      "train_f1": 0.2339,
+      "val_f1": 0.2249,
+      "n_leaves": 4
+    },
+    {
+      "depth": 3,
+      "label": "3",
+      "train_f1": 0.1826,
+      "val_f1": 0.1718,
+      "n_leaves": 8
+    },
+    {
+      "depth": 5,
+      "label": "5",
+      "train_f1": 0.5544,
+      "val_f1": 0.5453,
+      "n_leaves": 32
+    },
+    {
+      "depth": 8,
+      "label": "8",
+      "train_f1": 0.6313,
+      "val_f1": 0.5865,
+      "n_leaves": 250
+    },
+    {
+      "depth": 12,
+      "label": "12",
+      "train_f1": 0.8091,
+      "val_f1": 0.6047,
+      "n_leaves": 2094
+    },
+    {
+      "depth": 20,
+      "label": "20",
+      "train_f1": 0.9546,
+      "val_f1": 0.5742,
+      "n_leaves": 6038
+    },
+    {
+      "depth": null,
+      "label": "None",
+      "train_f1": 1.0,
+      "val_f1": 0.5622,
+      "n_leaves": 9079
+    }
+  ],
+  "best_depth": "12",
+  "best_val_f1": 0.6047,
+  "best_depth_map": 0.0866,
+  "best_depth_map_per_class": {
+    "person": 0.1131,
+    "car": 0.068,
+    "truck": 0.0788
+  },
+  "svm_comparison": {
+    "fg_macro_f1": 0.745,
+    "map": 0.1885
+  }
+}

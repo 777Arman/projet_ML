@@ -12,9 +12,12 @@ Usage:
     python task2.py --data_dir ./coco_filtered
 """
 
-# Fix for sklearn/joblib threading issue on Windows with Python 3.14
+# Fix for sklearn/joblib/openmp threading issue on Windows with Python 3.14
 import os
-os.environ.setdefault("LOKY_MAX_CPU_COUNT", "4")
+os.environ["LOKY_MAX_CPU_COUNT"] = "4"
+os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["MKL_NUM_THREADS"] = "1"
+os.environ["OPENBLAS_NUM_THREADS"] = "1"
 
 import argparse
 import json
@@ -23,7 +26,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from pathlib import Path
-from sklearn.svm import LinearSVC
+from sklearn.linear_model import SGDClassifier
 from sklearn.metrics import classification_report, confusion_matrix
 from imblearn.over_sampling import SMOTE
 
@@ -145,12 +148,20 @@ def apply_smote(X_train, y_train, random_state=42):
     for u, c in zip(unique, counts):
         print(f"    {LABEL_NAMES[u]:<12}: {c:>8}")
     
-    # Combine background and resampled foreground
-    X_combined = np.vstack([X_bg, X_fg_resampled])
-    y_combined = np.concatenate([y_bg, y_fg_resampled])
-    
+    # Subsample background to avoid memory overflow (keep 3x largest fg class)
+    n_fg_max = y_fg_resampled.shape[0]
+    n_bg_keep = min(len(y_bg), n_fg_max * 3)
+    rng = np.random.RandomState(random_state)
+    bg_idx = rng.choice(len(y_bg), size=n_bg_keep, replace=False)
+    X_bg_sub = X_bg[bg_idx]
+    y_bg_sub = y_bg[bg_idx]
+
+    # Combine subsampled background and resampled foreground
+    X_combined = np.vstack([X_bg_sub, X_fg_resampled])
+    y_combined = np.concatenate([y_bg_sub, y_fg_resampled])
+
     # Shuffle
-    shuffle_idx = np.random.RandomState(random_state).permutation(len(y_combined))
+    shuffle_idx = rng.permutation(len(y_combined))
     X_combined = X_combined[shuffle_idx]
     y_combined = y_combined[shuffle_idx]
     
@@ -163,8 +174,10 @@ def train_and_evaluate(X_train, y_train, X_val, y_val, boxes_val, ids_val,
     """Train SVM and evaluate on validation set."""
     print(f"\nTraining {model_name}...")
     
-    svm = LinearSVC(max_iter=2000, random_state=42)
+    svm = SGDClassifier(loss='hinge', max_iter=2000, random_state=42, tol=1e-3, n_jobs=1)
+    print(f"  Start SVM fit ({X_train.shape[0]} samples)...")
     svm.fit(X_train, y_train)
+    print("  SVM fit done.")
     
     y_pred = svm.predict(X_val)
     scores = svm.decision_function(X_val)
@@ -272,8 +285,10 @@ def main():
     print(f"  Train (original): {X_train_orig.shape[0]} regions")
     
     print("\nTraining Class-weighted SVM...")
-    svm_weighted = LinearSVC(max_iter=2000, random_state=42, class_weight='balanced')
+    svm_weighted = SGDClassifier(loss='hinge', max_iter=2000, random_state=42, tol=1e-3, n_jobs=1, class_weight='balanced')
+    print(f"  Start SVM (weighted) fit ({X_train_orig.shape[0]} samples)...")
     svm_weighted.fit(X_train_orig, y_train_orig)
+    print("  SVM (weighted) fit done.")
     
     y_pred_weighted = svm_weighted.predict(X_val)
     scores_weighted = svm_weighted.decision_function(X_val)

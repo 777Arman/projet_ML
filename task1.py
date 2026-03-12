@@ -168,6 +168,7 @@ def main():
     # Assign your results to the variables below.
 
     from sklearn.svm import LinearSVC
+    print("\n Start SVM")
     svm = LinearSVC(max_iter=2000, random_state=42)
     svm.fit(X_train, y_train)
     y_pred_svm = svm.predict(X_val)
@@ -175,6 +176,7 @@ def main():
     conf_svm   = scores_svm[np.arange(len(X_val)), y_pred_svm]
 
     from sklearn.tree import DecisionTreeClassifier
+    print("\n Start Decision Tree")
     tree = DecisionTreeClassifier(max_depth=10, random_state=42)
     tree.fit(X_train, y_train)
     y_pred_tree = tree.predict(X_val)

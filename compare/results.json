@@ -1,0 +1,44 @@
+[
+  {
+    "task": "Task 1",
+    "model": "Linear SVM",
+    "f1": 0.745,
+    "map": 0.1885
+  },
+  {
+    "task": "Task 1",
+    "model": "Decision Tree (baseline)",
+    "f1": 0.6106,
+    "map": 0.1029
+  },
+  {
+    "task": "Task 2",
+    "model": "Region-level Augmentation",
+    "f1": 0.7381,
+    "map": 0.1841
+  },
+  {
+    "task": "Task 2",
+    "model": "SMOTE",
+    "f1": 0.7537,
+    "map": 0.1773
+  },
+  {
+    "task": "Task 2",
+    "model": "Class-weighted SVM",
+    "f1": 0.7627,
+    "map": 0.1909
+  },
+  {
+    "task": "Task 3",
+    "model": "Approx. RBF SVM",
+    "f1": 0.6711,
+    "map": 0.1224
+  },
+  {
+    "task": "Task 4",
+    "model": "Decision Tree (depth=12)",
+    "f1": 0.6047,
+    "map": 0.0866
+  }
+]

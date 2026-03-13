@@ -1,0 +1,38 @@
+{
+  "Region-level Augmentation": {
+    "fg_macro_f1": 0.7381,
+    "map": 0.1841,
+    "map_per_class": {
+      "person": 0.2059,
+      "car": 0.1465,
+      "truck": 0.1998
+    }
+  },
+  "SMOTE": {
+    "fg_macro_f1": 0.7537,
+    "map": 0.1773,
+    "map_per_class": {
+      "person": 0.1898,
+      "car": 0.1642,
+      "truck": 0.1779
+    }
+  },
+  "Class-weighted SVM": {
+    "fg_macro_f1": 0.7627,
+    "map": 0.1909,
+    "map_per_class": {
+      "person": 0.2158,
+      "car": 0.1336,
+      "truck": 0.2234
+    }
+  },
+  "Baseline (Task 1)": {
+    "fg_macro_f1": 0.745,
+    "map": 0.1885,
+    "map_per_class": {
+      "person": 0.2129,
+      "car": 0.1598,
+      "truck": 0.1927
+    }
+  }
+}
